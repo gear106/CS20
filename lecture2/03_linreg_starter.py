@@ -36,9 +36,17 @@ b = tf.get_variable(name='bias', initializer=tf.constant(0.0))
 # e.g. how would you derive at Y_predicted given X, w, and b
 Y_predicted = tf.multiply(w, X) + b
 
+# 这里可以定义Huber loss,是为了增强平方误差损失函数对噪声的鲁棒性
+def huber_loss(labels, predictions, delta=14.0):
+    residual = tf.abs(labels - predictions)
+    def f1(): return 0.5*tf.square(residual)
+    def f2(): return delta * residual - 0.5 * tf.square(delta)
+    
+    return tf.cond(residual < delta, f1, f2)
 
 # Step 5: use the square error as the loss function
-loss = tf.square(Y - Y_predicted, name='losses')
+#loss = tf.square(Y - Y_predicted, name='losses')
+loss = huber_loss(Y, Y_predicted)
 
 # Step 6: using gradient descent with learning rate of 0.001 to minimize loss
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001).minimize(loss)
